@@ -134,7 +134,7 @@ if __name__ == "__main__":
 			# store experience
 			exp_replay.remember([input_tm1, action, reward, input_t], game_over)
 
-			# adapt model
+			# adapt models
 			inputs, targets = exp_replay.get_batch(model, batch_size=batch_size)
 
 			loss += model.train_on_batch(inputs, targets)
@@ -143,6 +143,6 @@ if __name__ == "__main__":
 			win_cnt += 1
 
 		print("Epoch {:03d}/{} | Loss {:.4f} | Win count {} | Epsilon {:.4f}".format(e, epoch, loss, win_cnt, epsilon))
-		# Save trained model weights and architecture, this will be used by the visualization code
-		model.save_weights("model.h5" if modelFilename == None else modelFilename, overwrite=True)
+		# Save trained models weights and architecture, this will be used by the visualization code
+		model.save_weights("models.h5" if modelFilename == None else modelFilename, overwrite=True)
 		epsilon = max(min_epsilon, epsilon * 0.99)

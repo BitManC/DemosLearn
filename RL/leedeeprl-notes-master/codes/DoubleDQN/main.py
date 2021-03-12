@@ -66,7 +66,7 @@ def train(cfg):
     if not os.path.exists(SAVED_MODEL_PATH): # 检测是否存在文件夹
         os.mkdir(SAVED_MODEL_PATH)
     agent.save_model(SAVED_MODEL_PATH+'checkpoint.pth')
-    print('model saved！')
+    print('models saved！')
     '''存储reward等相关结果'''
     save_results(rewards,moving_average_rewards,ep_steps,tag='train',result_path=RESULT_PATH)
     

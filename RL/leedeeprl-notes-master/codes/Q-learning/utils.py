@@ -26,4 +26,4 @@ def save_model(agent,model_path='./saved_model'):
     if not os.path.exists(model_path): # 检测是否存在文件夹
         os.mkdir(model_path)
     agent.save_model(model_path+'checkpoint')
-    print('model saved！')
+    print('models saved！')

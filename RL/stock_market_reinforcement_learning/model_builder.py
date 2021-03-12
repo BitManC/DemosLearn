@@ -24,4 +24,4 @@ class AbstractModelBuilder(object):
 
 	# You need to override this method.
 	def buildModel(self):
-		raise NotImplementedError("You need to implement your own model.")
+		raise NotImplementedError("You need to implement your own models.")

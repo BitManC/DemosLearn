@@ -23,11 +23,11 @@ class Agent:
     def eval(self):
         self._train = False
 
-    # At the end of training save the trained model
+    # At the end of training save the trained models
     def save_model(self, model_path):
         utils.save(model_path, self.Q)
 
-    # Load the trained model for evaluation
+    # Load the trained models for evaluation
     def load_model(self, model_path):
         self.Q = utils.load(model_path)
 

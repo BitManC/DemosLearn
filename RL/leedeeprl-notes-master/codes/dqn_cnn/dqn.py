@@ -73,7 +73,7 @@ class DQN:
         reward_batch = torch.cat(batch.reward) # tensor([1., 1.,...,])
         
 
-        # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
+        # Compute Q(s_t, a) - the models computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
         state_action_values = self.policy_net(
@@ -95,7 +95,7 @@ class DQN:
         # Compute Huber loss
         self.loss = F.smooth_l1_loss(
             state_action_values, expected_state_action_values.unsqueeze(1))  # .unsqueeze增加一个维度
-        # Optimize the model
+        # Optimize the models
         self.optimizer.zero_grad() # zero_grad clears old gradients from the last step (otherwise you’d just accumulate the gradients from all loss.backward() calls).
         self.loss.backward() # loss.backward() computes the derivative of the loss w.r.t. the parameters (or anything requiring gradients) using backpropagation.
         for param in self.policy_net.parameters(): # clip防止梯度爆炸

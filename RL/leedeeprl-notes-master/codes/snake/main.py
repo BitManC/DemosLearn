@@ -139,7 +139,7 @@ def main():
                         help='making the game human playable - default False')
 
     parser.add_argument('--model_name', dest="model_name", type=str, default="checkpoint3.npy",
-                        help='name of model to save if training or to load if evaluating - default q_agent')
+                        help='name of models to save if training or to load if evaluating - default q_agent')
 
     parser.add_argument('--train_episodes', dest="train_eps", type=int, default=10000,
                         help='number of training episodes - default 10000')

@@ -39,14 +39,14 @@ def save(filename, arr):
 		np.save(filename,arr)
 		return True
 	else:
-		print("Failed to save model")
+		print("Failed to save models")
 		return False
 
 def load(filename):
 	try:
 		arr = np.load(filename)
 		if sanity_check(arr):
-			print("Loaded model successfully")
+			print("Loaded models successfully")
 			return arr
 		print("Model loaded is not in the required format")
 		return None

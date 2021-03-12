@@ -10,6 +10,7 @@ from collections import deque
 
 class Agent:
 	def __init__(self, state_size, is_eval=False, model_name=""):
+
 		self.state_size = state_size # normalized previous days
 		self.action_size = 3 # sit, buy, sell
 		self.memory = deque(maxlen=1000)
@@ -35,6 +36,9 @@ class Agent:
 		return model
 
 	def act(self, state):
+		'''
+		param: predict action in current state
+		'''
 		if not self.is_eval and random.random() <= self.epsilon:
 			return random.randrange(self.action_size)
 
@@ -44,6 +48,7 @@ class Agent:
 	def expReplay(self, batch_size):
 		mini_batch = []
 		l = len(self.memory)
+
 		for i in range(l - batch_size + 1, l):
 			mini_batch.append(self.memory[i])
 
@@ -57,4 +62,4 @@ class Agent:
 			self.model.fit(state, target_f, epochs=1, verbose=0)
 
 		if self.epsilon > self.epsilon_min:
-			self.epsilon *= self.epsilon_decay 
+			self.epsilon *= self.epsilon_decay
