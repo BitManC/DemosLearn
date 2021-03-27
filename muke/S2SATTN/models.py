@@ -70,10 +70,11 @@ class AttenDecoderRNN(nn.Module):
         # 这里的 attention 为linear, 需要学习的是 w * x 中的 w
         atten_weight = F.softmax(self.attn(torch.cat([embedded[0], hidden[0]], 1)), dim=1)
         att_applied = torch.bmm(atten_weight.unsqueeze(0), encoder_outputs.unsqueeze(0))
-
         output = torch.cat([embedded[0], att_applied[0]], dim=1)
         output = self.attn_combine(output).unsqueeze(0)
         output = F.relu(output)
+
+
         output, hidden = self.gru(output, hidden)
         output = F.log_softmax(self.out(output[0]), dim=1)
 
