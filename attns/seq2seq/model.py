@@ -9,6 +9,7 @@
 """
 Sequence to sequence model with global attention.
 """
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -56,22 +57,21 @@ class GlobalAttention(nn.Module):
         align = self.score(inputs, context)
         batch, tgt_len, src_len = align.size()
 
-
         mask = self.sequence_mask(context_lengths)
         # (batch, 1, src_len)
         mask = mask.unsqueeze(1)  # Make it broadcastable.
         if next(self.parameters()).is_cuda:
             mask = mask.cuda()
-        align.data.masked_fill_(1 - mask, -float('inf')) # fill <pad> with -inf
+        align.data.masked_fill_(1 - mask, -float('inf'))    # fill <pad> with -inf
 
-        align_vectors = self.softmax(align.view(batch*tgt_len, src_len))
+        align_vectors = self.softmax(align.view(batch * tgt_len, src_len))
         align_vectors = align_vectors.view(batch, tgt_len, src_len)
 
         # (batch, tgt_len, src_len) * (batch, src_len, enc_hidden) -> (batch, tgt_len, enc_hidden)
         c = torch.bmm(align_vectors, context)
 
         # \hat{h_t} = tanh(W [c_t, h_t])
-        concat_c = torch.cat([c, inputs], 2).view(batch*tgt_len, self.enc_hidden + self.dec_hidden)
+        concat_c = torch.cat([c, inputs], 2).view(batch * tgt_len, self.enc_hidden + self.dec_hidden)
         attn_h = self.tanh(self.linear_out(concat_c).view(batch, tgt_len, self.dec_hidden))
 
         # transpose will make it non-contiguous
@@ -86,16 +86,15 @@ class GlobalAttention(nn.Module):
         h_s (FloatTensor): batch x src_len x dim, context
         """
         tgt_batch, tgt_len, tgt_dim = h_t.size()
-        src_batch, src_len, src_dim = h_s.size()
+        # src_batch, src_len, src_dim = h_s.size()
 
-        h_t = h_t.view(tgt_batch*tgt_len, tgt_dim)
-        h_t_ = self.linear_in(h_t)
+        h_t = h_t.view(tgt_batch * tgt_len, tgt_dim)
+        # h_t_ = self.linear_in(h_t)
         h_t = h_t.view(tgt_batch, tgt_len, tgt_dim)
         # (batch, d, s_len)
         h_s_ = h_s.transpose(1, 2)
         # (batch, t_len, d) x (batch, d, s_len) --> (batch, t_len, s_len)
         return torch.bmm(h_t, h_s_)
-
 
 class EncoderRNN(nn.Module):
     def __init__(self, vocab_size, embed_size, hidden_size, n_layers=1, padding_idx=1):
@@ -124,8 +123,7 @@ class EncoderRNN(nn.Module):
 
 
 class DecoderRNN(nn.Module):
-    """
-    """
+
     def __init__(self, vocab_size, embed_size, hidden_size, n_layers=1, encoder_hidden=None, dropout_p=0.2, padding_idx=1, packed=True):
         super(DecoderRNN, self).__init__()
         self.n_layers = n_layers
@@ -155,8 +153,7 @@ class DecoderRNN(nn.Module):
         attn_outputs, attn_scores = self.attn(
             decoder_unpacked.transpose(0, 1).contiguous(),  # (len, batch, d) -> (batch, len, d)
             context.transpose(0, 1).contiguous(),         # (len, batch, d) -> (batch, len, d)
-            context_lengths=context_lengths
-        )
+            context_lengths=context_lengths)
         # Don't need LogSoftmax with CrossEntropyLoss
         # the outputs are not normalized, and can be negative
         # Note that a mask is needed to compute the loss

@@ -31,6 +31,7 @@ EOS = "<eos>"
 SOS = "<sos>"
 PAD = "<pad>"
 
+
 def split_data(root, filenames, exts, train_ratio=0.8, test_ratio=0.2):
     """
     Examples: filenames = ['en.txt', 'fr.txt'], exts = ['src', 'trg']
@@ -46,7 +47,8 @@ def split_data(root, filenames, exts, train_ratio=0.8, test_ratio=0.2):
             lines = f.readlines()
             n = len(lines)
             p = np.random.permutation(n) if p is None else p
-            train, test, valid = np.split(np.arange(n)[p], [int(n*train_ratio), int(n*train_ratio+n*test_ratio)])
+            train, test, valid = np.split(np.arange(n)[p],
+                                          [int(n * train_ratio), int(n * train_ratio + n * test_ratio)])
 
             train = [lines[i] for i in train]
             test = [lines[i] for i in test]
@@ -65,19 +67,22 @@ def stoi(s, field):
     sent = [field.vocab.stoi[w] for w in s]
     return sent
 
+
 def itos(s, field):
     sent = [field.vocab.itos[w] for w in s]
     return sent
 
+
 def since(t):
     return '[' + str(datetime.timedelta(seconds=time.time() - t)) + '] '
+
 
 def init_logging(log_name):
     """
 
     """
     formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(module)s: %(message)s',
-            datefmt='%m/%d/%Y %H:%M:%S'   )
+                                  datefmt='%m/%d/%Y %H:%M:%S')
     handler = logging.FileHandler(log_name)
     out = logging.StreamHandler(sys.stdout)
 
@@ -107,7 +112,7 @@ def load_data(c):
         return [tok.text for tok in spacy_trg.tokenizer(text)]
 
     src_field = Field(tokenize=tokenize_src, include_lengths=True, eos_token=EOS, lower=True)
-    trg_field= Field(tokenize=tokenize_trg, include_lengths=True, eos_token=EOS, lower=True, init_token=SOS)
+    trg_field = Field(tokenize=tokenize_trg, include_lengths=True, eos_token=EOS, lower=True, init_token=SOS)
 
     datasets = {}
     # load processed data
@@ -115,12 +120,12 @@ def load_data(c):
         if os.path.isfile(c['root'] + split + '.pkl'):
             print('Loading {0}'.format(c['root'] + split + '.pkl'))
             examples = pickle.load(open(c['root'] + split + '.pkl', 'rb'))
-            datasets[split] = Dataset(examples = examples, fields={'src':src_field,'trg': trg_field})
+            datasets[split] = Dataset(examples=examples, fields={'src': src_field, 'trg': trg_field})
         else:
             src_path = c['root'] + split + '.src'
             trg_path = c['root'] + split + '.trg'
             examples = c['load'](src_path, trg_path, src_field, trg_field)
-            datasets[split] = Dataset(examples = examples, fields={'src':src_field,'trg': trg_field})
+            datasets[split] = Dataset(examples=examples, fields={'src': src_field, 'trg': trg_field})
             print('Saving to {0}'.format(c['root'] + split + '.pkl'))
             pickle.dump(examples, open(c['root'] + split + '.pkl', 'wb'))
 
@@ -159,7 +164,8 @@ def evaluate(encoder, decoder, var, trg_field, max_len=30, beam_size=-1):
             for h in H:
                 hyp, s = h
                 decoder_inputs, decoder_lenghts = trg_field.numericalize(([hyp], [len(hyp)]), device=-1)
-                decoder_unpacked, decoder_hidden = decoder(decoder_inputs, decoder_hidden, encoder_unpacked, encoder_lengths)
+                decoder_unpacked, decoder_hidden = decoder(decoder_inputs, decoder_hidden, encoder_unpacked,
+                                                           encoder_lengths)
                 topv, topi = decoder_unpacked.data[-1].topk(beam_size)
                 topv = logsm(topv)
                 for j in range(beam_size):
@@ -170,17 +176,18 @@ def evaluate(encoder, decoder, var, trg_field, max_len=30, beam_size=-1):
                         H_final.append((hyp_new, s_new))
                     else:
                         H_temp.append((hyp_new, s_new))
-                H_temp = sorted(H_temp, key=lambda x:x[1], reverse=True)
+                H_temp = sorted(H_temp, key=lambda x: x[1], reverse=True)
                 H = H_temp[:beam_size]
                 H_temp = []
 
-        H_final = sorted(H_final, key=lambda x:x[1], reverse=True)
+        H_final = sorted(H_final, key=lambda x: x[1], reverse=True)
         outputs = [" ".join(H_final[i][0]) for i in range(beam_size)]
 
     else:
         for i in range(max_len):
             # Eval mode, dropout is not used
-            decoder_unpacked, decoder_hidden = decoder.eval()(decoder_inputs, decoder_hidden, encoder_unpacked, encoder_lengths)
+            decoder_unpacked, decoder_hidden = decoder.eval()(decoder_inputs, decoder_hidden, encoder_unpacked,
+                                                              encoder_lengths)
             topv, topi = decoder_unpacked.data.topk(1)
             ni = int(topi.cpu().numpy()[0][0][0])
             if trg_field.vocab.itos[ni] == EOS:
@@ -192,6 +199,7 @@ def evaluate(encoder, decoder, var, trg_field, max_len=30, beam_size=-1):
             decoder_inputs = cuda(decoder_inputs, use_cuda)
         outputs = " ".join(outputs)
     return outputs.strip()
+
 
 def sample(encoder, decoder, var, trg_field, max_len=30, greedy=False, config=None):
     """ Sample an output given the input
@@ -218,7 +226,8 @@ def sample(encoder, decoder, var, trg_field, max_len=30, greedy=False, config=No
     for i in range(max_len):
         # TODO: shall we use eval mode?
         # decoder_unpacked: (1, 1, vocab_size), eval() is effective to Dropout and BatchNorm
-        decoder_unpacked, decoder_hidden = decoder.eval()(decoder_inputs, decoder_hidden, encoder_unpacked, encoder_lengths)
+        decoder_unpacked, decoder_hidden = decoder.eval()(decoder_inputs, decoder_hidden, encoder_unpacked,
+                                                          encoder_lengths)
         if greedy:
             logp, ni = torch.max(ls(decoder_unpacked.squeeze()), 0)
             # ni must be an integer, not like numpy.int32
@@ -244,19 +253,17 @@ def sample(encoder, decoder, var, trg_field, max_len=30, greedy=False, config=No
     return outputs, seq_log_probas
 
 
-
 def random_eval(encoder, decoder, batch, n, src_field, trg_field, config=None,
-        greedy=False, metric='rouge', logger=None):
-
+                greedy=False, metric='rouge', logger=None):
     enc_inputs, enc_lengths = batch.src
     dec_inputs, dec_lengths = batch.trg
 
     N = enc_inputs.size()[1]
     idx = np.random.choice(N, n)
     for i in idx:
-        logger.info('> ' + tostr(clean(itos(enc_inputs[:,i].cpu().data.numpy(), src_field))))
-        logger.info('= ' + tostr(clean(itos(dec_inputs[:,i].cpu().data.numpy(), trg_field))))
-        enc_input = (enc_inputs[:,i].unsqueeze(1), torch.LongTensor([enc_lengths[i]]))
+        logger.info('> ' + tostr(clean(itos(enc_inputs[:, i].cpu().data.numpy(), src_field))))
+        logger.info('= ' + tostr(clean(itos(dec_inputs[:, i].cpu().data.numpy(), trg_field))))
+        enc_input = (enc_inputs[:, i].unsqueeze(1), torch.LongTensor([enc_lengths[i]]))
         outputs, _ = sample(encoder, decoder, enc_input, trg_field, max_len=30, greedy=greedy, config=config)
         # sent = evaluate(encoder, decoder, enc_input, trg_field=trg_field, beam_size=beam_size)
         logger.info('< ' + tostr(clean(outputs)) + '\n')
@@ -272,18 +279,21 @@ def score(hyps, refs, metric='rouge'):
     assert metric in ['rouge', 'bleu']
     if metric is 'rouge':
         rouge = Rouge()
-    # {"rouge-1": {"f": _, "p": _, "r": _}, "rouge-2" : { ..     }, "rouge-3": { ... }}
+        # {"rouge-1": {"f": _, "p": _, "r": _}, "rouge-2" : { ..     }, "rouge-3": { ... }}
         scores = rouge.get_scores(hyps, refs, avg=True)
     elif metric is 'bleu':
         pass
     return scores
 
-def get_rewards(encoder, decoder,src_field, trg_field, beam_size=-1, metric='rouge'):
+
+def get_rewards(encoder, decoder, src_field, trg_field, beam_size=-1, metric='rouge'):
     pass
+
 
 def synchronize(config):
     if config['use_cuda']:
         torch.cuda.synchronize()
+
 
 def clean(l):
     """
@@ -292,8 +302,10 @@ def clean(l):
     symbols = [EOS, SOS, PAD]
     return [w for w in l if w not in symbols]
 
+
 def tostr(l):
     return " ".join(l)
+
 
 def get_rouge(hyps, refs):
     """
@@ -301,6 +313,6 @@ def get_rouge(hyps, refs):
     """
     scores = score(hyps=hyps, refs=refs, metric='rouge')
     s = "\nROUGE-1: {0}\nROUGE-2: {1}\nROUGE-L: {2}\n".format(
-            scores['rouge-1']['f'], scores['rouge-2']['f'],
-            scores['rouge-l']['f'])
+        scores['rouge-1']['f'], scores['rouge-2']['f'],
+        scores['rouge-l']['f'])
     return s

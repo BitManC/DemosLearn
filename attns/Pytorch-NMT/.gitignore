@@ -1,0 +1,9 @@
+### meta
+.idea/*
+.ropeproject/*
+### Python
+__pycache__/*
+*.pyc
+### Data
+/* data/*params* */
+/* data/*.txt */
