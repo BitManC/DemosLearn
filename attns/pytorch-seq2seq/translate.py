@@ -6,7 +6,6 @@ import dill
 
 import torch
 from torchtext import data
-
 from options import translate_opts
 from model import Seq2seqAttn
 

@@ -13,21 +13,21 @@ from language import Language
 
 # Parse argument for language to train
 parser = argparse.ArgumentParser()
-parser.add_argument('--attn_model', type=str, help='attention type: dot, general, concat')
-parser.add_argument('--embedding_size', type=int)
-parser.add_argument('--hidden_size', type=int)
-parser.add_argument('--n_layers', type=int)
-parser.add_argument('--dropout', type=float)
+parser.add_argument('--attn_model', type=str, default='general', help='attention type: dot, general, concat')
+parser.add_argument('--embedding_size', type=int, default=256)
+parser.add_argument('--hidden_size', type=int, default=256)
+parser.add_argument('--n_layers', type=int, default=2)
+parser.add_argument('--dropout', type=float, default=0.1)
 parser.add_argument('--teacher_forcing_ratio', type=float, default=0.5)
 parser.add_argument('--clip', type=float, default=5.0)
 parser.add_argument('--lr', type=float, default=0.001)
-parser.add_argument('--n_epochs', type=int)
-parser.add_argument('--plot_every', type=int)
-parser.add_argument('--print_every', type=int)
-parser.add_argument('--language', type=str, help='specific which language.')
+parser.add_argument('--n_epochs', type=int, default=5000)
+parser.add_argument('--plot_every', type=int, default= 200)
+parser.add_argument('--print_every', type=int, default=1000)
+parser.add_argument('--language', type=str, default='spa', help='specific which language.')
 parser.add_argument('--input', type=str, help='src -> tgt')
 parser.add_argument('--device', type=str, help='cpu or cuda')
-parser.add_argument('--seed', type=str, help='random seed')
+parser.add_argument('--seed', type=str, default='19', help='random seed')
 args = parser.parse_args()
 
 print(sys.argv)
@@ -37,6 +37,7 @@ device = torch.device(args.device)
 print('device: ', device)
 
 helpers.validate_language(args.language)
+
 
 def train(input, target, encoder, decoder, encoder_opt, decoder_opt, criterion):
     # Initialize optimizers and loss
@@ -95,6 +96,7 @@ def train(input, target, encoder, decoder, encoder_opt, decoder_opt, criterion):
 
     return loss.item() / target_length
 
+
 input_lang, output_lang, pairs = etl.prepare_data(args.language)
 
 # Initialize models
@@ -123,12 +125,11 @@ encoder_optimizer = optim.Adam(encoder.parameters(), lr=args.lr)
 decoder_optimizer = optim.Adam(decoder.parameters(), lr=args.lr)
 criterion = nn.NLLLoss()
 
-
 # Keep track of time elapsed and running averages
 start = time.time()
 plot_losses = []
-print_loss_total = 0 # Reset every print_every
-plot_loss_total = 0 # Reset every plot_every
+print_loss_total = 0  # Reset every print_every
+plot_loss_total = 0  # Reset every plot_every
 
 # Begin training
 for epoch in range(1, args.n_epochs + 1):
@@ -157,7 +158,6 @@ for epoch in range(1, args.n_epochs + 1):
         plot_loss_avg = plot_loss_total / args.plot_every
         plot_losses.append(plot_loss_avg)
         plot_loss_total = 0
-
 
 # Save our models
 torch.save(encoder.state_dict(), './data/encoder_params_{}'.format(args.language))

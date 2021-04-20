@@ -16,7 +16,7 @@ class Attention(nn.Module):
             self.attention = nn.Linear(self.hidden_size, self.hidden_size)
         elif self.method == 'concat':
             self.attention = nn.Linear(self.hidden_size * 2, self.hidden_size)
-            self.other = nn.Parameter(torch.FloatTensor(1, self.hidden_size))
+            self.other = nn.Parameter(torch.FloatTensor(1, self.hidden_s1ize))
 
     def forward(self, hidden, encoder_outputs):
         """Attend all encoder inputs conditioned on the previous hidden state of the decoder.

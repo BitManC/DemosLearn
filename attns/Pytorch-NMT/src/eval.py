@@ -8,22 +8,22 @@ from encoder import EncoderRNN
 from language import Language
 from beam import Beam
 
-
 # Parse argument for input sentence
 parser = argparse.ArgumentParser()
-parser.add_argument('--attn_model', type=str, help='attention type: dot, general, concat')
-parser.add_argument('--embedding_size', type=int)
-parser.add_argument('--hidden_size', type=int)
-parser.add_argument('--n_layers', type=int)
-parser.add_argument('--dropout', type=float)
-parser.add_argument('--language', type=str, help='specific which language.')
-parser.add_argument('--input', type=str, help='src -> tgt')
-parser.add_argument('--max_len', type=int)
-parser.add_argument('--beam_size', type=int)
-parser.add_argument('--batch_size', type=int)
-parser.add_argument('--device', type=str, help='cpu or cuda')
-parser.add_argument('--seed', type=str, help='random seed')
+parser.add_argument('--attn_model', type=str, default='general', help='attention type: dot, general, concat')
+parser.add_argument('--embedding_size', default=256, type=int)
+parser.add_argument('--hidden_size', default=256, type=int)
+parser.add_argument('--n_layers', default=2, type=int)
+parser.add_argument('--dropout', default=0.1, type=float)
+parser.add_argument('--language', type=str, default='afr', help='specific which language.')
+parser.add_argument('--input', type=str, default='i love you',help='src -> tgt')
+parser.add_argument('--max_len',  type=int, default=10,)
+parser.add_argument('--beam_size', type=int ,default=5)
+parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--device', type=str, default='cpu', help='cpu or cuda')
+parser.add_argument('--seed', type=str, default= '19', help='random seed')
 args = parser.parse_args()
+
 helpers.validate_language_params(args.language)
 
 input_lang, output_lang, pairs = etl.prepare_data(args.language)
@@ -85,7 +85,6 @@ def evaluate(sentence, max_len=10):
         device
     )
     topk_decoder = topk_decoder.to(device)
-
 
     decoder_outputs, _, metadata = topk_decoder(
         decoder_context,
@@ -154,6 +153,7 @@ def greedy_decode(decoder_context,
 
     return decoded_words, decoder_attentions[:di + 1, :encoder_outputs.size(0)]
 
+
 def beam_decode(decoder_context,
                 decoder_hidden,
                 encoder_outputs,
@@ -187,9 +187,9 @@ def beam_decode(decoder_context,
 
     for i in range(max_len):
         decoder_output, decoder_context, decoder_hidden, _ = decoder(decoder_input,
-                                                                    decoder_context,
-                                                                    decoder_hidden,
-                                                                    encoder_outputs)
+                                                                     decoder_context,
+                                                                     decoder_hidden,
+                                                                     encoder_outputs)
         # output: [1, batch_size * beam_size, vocab_size]
         # -> [batch_size * beam_size, vocab_size]
         log_prob = decoder_output
@@ -238,6 +238,7 @@ def assemble_sentence(words):
     sentence = ' '.join(final_words)
     return sentence
 
+
 def print_sentence(words, lengths=None, mode='greedy'):
     if mode == 'greedy':
         print('greedy > %s' % assemble_sentence(words))
@@ -247,6 +248,6 @@ def print_sentence(words, lengths=None, mode='greedy'):
             sentence = assemble_sentence(cur_words)
             print('beam %d > %s' % (i, sentence))
 
+
 input_sentence = helpers.normalize_string(args.input)
 evaluate(input_sentence, args.max_len)
-
